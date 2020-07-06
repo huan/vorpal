@@ -247,9 +247,7 @@ export class Vorpal extends EventEmitter {
    */
 
   public pipe (fn: Function) {
-    if (this.ui) {
-      this.ui._pipeFn = fn
-    }
+    this.ui._pipeFn = fn
     return this
   }
 
