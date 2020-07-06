@@ -4,20 +4,6 @@ import History from '../history';
 import Option from '../option';
 import {IAutocompleteConfig} from './autocomplete';
 
-export interface IVorpal extends EventEmitter {
-  parent: IVorpal;
-  commands: ICommand[];
-  cmdHistory: History;
-  command(name, desc?, opts?): ICommand;
-  log(...args);
-  ui: any;
-  util: any;
-  session: any;
-  prompt(options, cb);
-  _commandHelp(command);
-  _send(...argz); // TODO interface to change
-}
-
 export type ArgTypes = {
   [P in 'string' | 'boolean']: unknown;
 };
