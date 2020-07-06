@@ -43,7 +43,7 @@ export class CommandInstance {
     this.args = args
     this.commandWrapper = commandWrapper
     this.session = commandWrapper.session
-    this.parent = this.session.options.vorpal
+    this.parent = this.session.vorpal
     this.callback = callback
     this.downstream = downstream
   }
@@ -91,12 +91,8 @@ export class CommandInstance {
     }
   }
 
-  public help (a, b, c) {
-    return this.session.help(a, b, c)
-  }
-
-  public match (a, b, c) {
-    return this.session.match(a, b, c)
+  public help (a) {
+    return this.session.help(a)
   }
 
 }
