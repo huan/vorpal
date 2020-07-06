@@ -1,16 +1,27 @@
 import { noop, isFunction } from 'lodash'
-import { CommandArgs, CCommand, IcommandInstance } from './types/types'
+import { CommandArgs } from './types/types'
+
+import { Command } from './command'
+
+export interface CommandInstanceOptions {
+  commandWrapper?: any;
+  args?: CommandArgs;
+  commandObject?: Command;
+  command?: any;
+  callback?: any;
+  downstream?: CommandInstance;
+}
 
 export class CommandInstance {
 
   public commandWrapper: any;
   public args: CommandArgs;
   public commandObject: any;
-  public command: CCommand;
+  public command: Command;
   public session: any;
   public parent: any;
   public callback: any;
-  public downstream: IcommandInstance;
+  public downstream: CommandInstance;
   /**
    * Initialize a new `CommandInstance` instance.
    *
@@ -26,7 +37,7 @@ export class CommandInstance {
     commandWrapper,
     callback,
     downstream,
-  }: IcommandInstance = {}) {
+  }: CommandInstanceOptions = {}) {
     this.command = command
     this.commandObject = commandObject
     this.args = args

@@ -1,7 +1,6 @@
 import { EventEmitter } from 'events'
 import { camelCase, isFunction, isUndefined, isEmpty, isBoolean, isNil } from 'lodash'
 import Option from './option'
-import { CCommand } from './types/types'
 import { humanReadableArgName, pad } from './utils'
 
 import { Vorpal } from './vorpal'
@@ -12,9 +11,9 @@ export interface Arg {
   variadic: boolean;
 }
 
-export default class Command extends EventEmitter implements CCommand {
+export class Command extends EventEmitter {
 
-  public commands: CCommand[] = [];
+  public commands: Command[] = [];
   public options: Option[];
   public _args;
   public _aliases: string[];
@@ -527,3 +526,5 @@ export default class Command extends EventEmitter implements CCommand {
   }
 
 }
+
+export default Command

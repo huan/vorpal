@@ -1,7 +1,11 @@
 import { clone, isObject, isUndefined } from 'lodash'
 import Session from '../session'
-import { ArgTypes, CommandArgs, CCommand, IcommandInstance } from '../types/types'
-import minimist = require('minimist');
+import { ArgTypes, CommandArgs } from '../types/types'
+
+import { Command } from '../command'
+import { CommandInstance } from '../command-instance'
+
+import minimist from 'minimist'
 
 type CLIArgs = minimist.ParsedArgs & {
   [key: string]: string | boolean | number;
@@ -14,10 +18,10 @@ const ARGS_PATTERN = /"(.*?)"|'(.*?)'|`(.*?)`|([^\s"]+)/gi
 type CommandExecutionItem = {
   args: string | CommandArgs; // From buildCommandArgs()
   command: string; // The input on the command line
-  commandObject?: CCommand;
-  fn: (ci: IcommandInstance, args: CommandArgs) => void; // TODO response value?
+  commandObject?: Command;
+  fn: (ci: CommandInstance, args: CommandArgs) => void; // TODO response value?
   options: ModeOptions;
-  pipes: string[] | IcommandInstance[]; // From parseCommand()
+  pipes: string[] | CommandInstance[]; // From parseCommand()
   session: Session;
   sync: boolean;
 };
@@ -50,7 +54,7 @@ export function parseArgs (input: string, opts: Record<string, any> = null): CLI
 
 export function buildCommandArgs (
   passedArgs: string,
-  command: CCommand,
+  command: Command,
   execCommand?: CommandExecutionItem,
   isCommandArgKeyPairNormalized = false
 ): CommandArgs | string {

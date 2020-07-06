@@ -1,5 +1,6 @@
 /* eslint-disable sort-keys */
-import { CCommand, MMatchParts, InputCommand, IParsedCommand } from '../types/types'
+import { MMatchParts, InputCommand, IParsedCommand } from '../types/types'
+import { Command } from '../command'
 
 /**
  * Run a raw command string, e.g. foo -bar against a given list of commands,
@@ -7,7 +8,7 @@ import { CCommand, MMatchParts, InputCommand, IParsedCommand } from '../types/ty
  */
 export function matchCommand (
   commandName: InputCommand,
-  commands: CCommand[] = []
+  commands: Command[] = []
 ): MMatchParts<string> {
   const parts = String(commandName)
     .trim()
@@ -80,7 +81,7 @@ export function matchCommand (
 /**
  * Prepares a command and all its parts for execution.
  */
-export function parseCommand (command: InputCommand, commands: CCommand[] = []): IParsedCommand {
+export function parseCommand (command: InputCommand, commands: Command[] = []): IParsedCommand {
   const parsed = {
     pipes: [],
     match: null,

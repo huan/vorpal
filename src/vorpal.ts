@@ -1,10 +1,9 @@
 /* eslint-disable sort-keys */
 import { EventEmitter } from 'events'
 import minimist from 'minimist'
-import Command from './command'
+import { Command } from './command'
 import { CommandInstance } from './command-instance'
 import Session from './session'
-import { CCommand } from './types/types'
 import ui from './ui'
 import * as utils from './utils'
 import commons from './vorpal-commons'
@@ -20,7 +19,7 @@ export class Vorpal extends EventEmitter {
 
   private meta: VorpalMeta
 
-  public commands: CCommand[]
+  public commands: Command[]
 
   private _command: any
 
