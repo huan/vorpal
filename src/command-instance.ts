@@ -1,4 +1,3 @@
-import { noop, isFunction } from 'lodash'
 import { CommandArgs } from './types/types'
 
 import { Command } from './command'
@@ -49,20 +48,12 @@ export class CommandInstance {
   }
 
   /**
-   * Cancel running command.
-   */
-
-  public cancel () {
-    this.session.emit('vorpal_command_cancel')
-  }
-
-  /**
    * Route stdout either through a piped command, or the session's stdout.
    */
 
   public log (...args) {
     if (this.downstream) {
-      const fn = this.downstream.commandObject._fn || noop
+      const fn = this.downstream.commandObject._fn || (() => {})
       this.session.registerCommand()
       this.downstream.args.stdin = args
       const onComplete = (err?: Error) => {
@@ -77,7 +68,7 @@ export class CommandInstance {
       }
 
       const validate = this.downstream.commandObject._validate
-      if (isFunction(validate)) {
+      if (typeof validate === 'function') {
         try {
           validate.call(this.downstream, this.downstream.args)
         } catch (e) {
@@ -89,7 +80,7 @@ export class CommandInstance {
       }
 
       const res = fn.call(this.downstream, this.downstream.args, onComplete)
-      if (res && isFunction(res.then)) {
+      if (res instanceof Promise) {
         res
           .then(onComplete, onComplete)
           .catch(console.error)
@@ -97,14 +88,6 @@ export class CommandInstance {
     } else {
       this.session.log(...args)
     }
-  }
-
-  public prompt (a, b, c) {
-    return this.session.prompt(a, b, c)
-  }
-
-  public delimiter (a, b, c) {
-    return this.session.delimiter(a, b, c)
   }
 
   public help (a, b, c) {

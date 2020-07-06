@@ -44,4 +44,8 @@ vorpal
     cb();
   });
 
-vorpal.exec('help')
+vorpal.exec('help build')
+
+vorpal.exec('build -d -a 123')
+
+vorpal.exec('波若波罗蜜 哈哈')
