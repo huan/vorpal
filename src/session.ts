@@ -12,24 +12,14 @@ interface CommandResponse {
 
 export default class Session extends EventEmitter {
 
-  public _registeredCommands: number;
-  public _completedCommands: number;
-  public _commandSetCallback: any;
-  public id: any;
-  public vorpal;
-  public parent: Vorpal;
-  public authenticating: any;
-  public user: any;
-  public host: any;
-  public address: any;
-  public _isLocal: any;
-  public _delimiter: any;
-  public _modeDelimiter: any;
-  public _tabCount: number;
-  public cmdHistory: any;
-  public _mode: any;
-  public _histCtr: number;
-  public cancelCommands: any;
+  private _registeredCommands: number;
+  private _completedCommands: number;
+  private _commandSetCallback: any;
+  private id: any;
+  private vorpal;
+  private parent: Vorpal;
+  private user: any;
+  private cancelCommands: any;
   /**
    * Initialize a new `Session` instance.
    *
@@ -43,22 +33,7 @@ export default class Session extends EventEmitter {
     options = options || {}
     this.id = options.id || this._guid()
     this.parent = options.parent || undefined
-    this.authenticating = options.authenticating || false
-    this.authenticating = options.authenticated || undefined
     this.user = options.user || 'guest'
-    this.host = options.host
-    this.address = options.address || undefined
-    this._isLocal = options.local || undefined
-    this._delimiter = options.delimiter || String(os.hostname()).split('.')[0] + '~$'
-    this._modeDelimiter = undefined
-
-    // Keeps history of how many times in a row `tab` was
-    // pressed on the keyboard.
-    this._tabCount = 0
-
-    // Special command mode vorpal is in at the moment,
-    // such as REPL. See mode documentation.
-    this._mode = undefined
   }
 
   /**
@@ -70,20 +45,7 @@ export default class Session extends EventEmitter {
    * @return {Session}
    * @api public
    */
-  public log (...args: string[]) {
-    return this._log(...args)
-  }
-
-  /**
-   * Routes logging for a given session.
-   * is on a local TTY, or remote.
-   *
-   * @param {String} [... arguments]
-   * @return {Session}
-   * @api public
-   */
-  public _log (...args) {
-    const self = this
+  public log (...args) {
     this.parent.ui.log(...args)
     return this
   }

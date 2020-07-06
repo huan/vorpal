@@ -1,18 +1,17 @@
 /* eslint-disable sort-keys */
 import { EventEmitter } from 'events'
-import minimist from 'minimist'
 import { Command } from './command'
 import { CommandInstance } from './command-instance'
 import Session from './session'
-import ui from './ui'
+import UI from './ui'
 import * as utils from './utils'
 import commons from './vorpal-commons'
 
 interface VorpalMeta {
-  version?: string,
-  title?: string,
+  version?    : string,
+  title?      : string,
   description?: string,
-  banner?: string,
+  banner?     : string,
 }
 
 export class Vorpal extends EventEmitter {
@@ -21,11 +20,8 @@ export class Vorpal extends EventEmitter {
 
   public commands: Command[]
 
-  private _command: any
-
   public ui: any
   public util: any
-  public Session: typeof Session
   public session: any
   private isCommandArgKeyPairNormalized: boolean
 
@@ -40,19 +36,14 @@ export class Vorpal extends EventEmitter {
     // their options.
     this.commands = []
 
-    // Current command being executed.
-    this._command = undefined
-
     // Expose UI.
-    this.ui = ui
+    this.ui = new UI()
 
     // Expose common utilities, like padding.
     this.util = utils
 
-    this.Session = Session
-
     // Active vorpal server session.
-    this.session = new this.Session({
+    this.session = new Session({
       local: true,
       user: 'local',
       parent: this,
@@ -313,7 +304,6 @@ export class Vorpal extends EventEmitter {
     item = item || {}
     item.command = item.command || ''
     const modeCommand = item.command
-    item.command = item.session._mode ? item.session._mode : item.command
 
     const commandData = utils.parseCommand(item.command, this.commands)
     item.command = commandData.command
