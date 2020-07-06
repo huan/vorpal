@@ -307,14 +307,6 @@ export default class Vorpal extends EventEmitter {
     })
   }
 
-  /**
-   * Executes a vorpal API command.
-   * Warning: Dragons lie beyond this point.
-   *
-   * @param {String} item
-   * @api private
-   */
-
   public _exec (item) {
     const self = this
     item = item || {}
@@ -336,32 +328,12 @@ export default class Vorpal extends EventEmitter {
       cmd.session.log(pickedMatch.helpInformation())
     }
 
-    function callback (cmd, err?, msg?, argus?) {
-      if (cmd.sync) {
-        // If we want the command to be fatal,
-        // throw a real error. Otherwise, silently
-        // return the error.
-        delete self._command
-        if (err) {
-          if (cmd.options && (cmd.options.fatal === true || self._fatal === true)) {
-            throw new Error(err)
-          }
-          return err
-        }
-        return msg
-      } else if (cmd.callback) {
-        if (argus) {
-          cmd.callback.apply(self, argus)
-        } else {
-          cmd.callback.call(self, err, msg)
-        }
-      } else if (!err && cmd.resolve) {
+    function callback (cmd, err?, msg?) {
+      if (!err && cmd.resolve) {
         cmd.resolve(msg)
       } else if (err && cmd.reject) {
         cmd.reject(msg)
       }
-      delete self._command
-      self._queueHandler()
     }
 
     if (match) {
@@ -373,7 +345,6 @@ export default class Vorpal extends EventEmitter {
         || function (args, cb) {
           cb()
         }
-      const delimiter = match._delimiter || String(item.command) + ':'
 
       item.args = utils.buildCommandArgs(
         matchArgs,
