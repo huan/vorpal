@@ -3,7 +3,6 @@ import { EventEmitter } from 'events'
 import { Command } from './command'
 import { CommandInstance } from './command-instance'
 import Session from './session'
-import UI from './ui'
 import * as utils from './utils'
 import commons from './vorpal-commons'
 
@@ -20,8 +19,7 @@ export class Vorpal extends EventEmitter {
 
   public commands: Command[]
 
-  public ui: any
-  public util: any
+  // private util: any
   public session: any
   private isCommandArgKeyPairNormalized: boolean
 
@@ -36,19 +34,11 @@ export class Vorpal extends EventEmitter {
     // their options.
     this.commands = []
 
-    // Expose UI.
-    this.ui = new UI()
-
-    // Expose common utilities, like padding.
-    this.util = utils
+    // // Expose common utilities, like padding.
+    // this.util = utils
 
     // Active vorpal server session.
-    this.session = new Session({
-      local: true,
-      user: 'local',
-      parent: this,
-      delimiter: '#',
-    })
+    this.session = new Session(this)
 
     // Allow unix-like key value pair normalization to be turned off by toggling this switch on.
     this.isCommandArgKeyPairNormalized = true
@@ -232,7 +222,7 @@ export class Vorpal extends EventEmitter {
    */
 
   public log (...args) {
-    this.ui.log(...args)
+    this.session.log(...args)
     return this
   }
 
@@ -247,7 +237,7 @@ export class Vorpal extends EventEmitter {
    */
 
   public pipe (fn: Function) {
-    this.ui._pipeFn = fn
+    this.session._pipeFn = fn
     return this
   }
 

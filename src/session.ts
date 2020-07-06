@@ -10,16 +10,19 @@ interface CommandResponse {
   args?: any;
 }
 
-export default class Session extends EventEmitter {
+export class Session extends EventEmitter {
 
   private _registeredCommands: number;
   private _completedCommands: number;
   private _commandSetCallback: any;
-  private id: any;
-  private vorpal;
-  private parent: Vorpal;
-  private user: any;
-  private cancelCommands: any;
+
+  /**
+   * Compitable with old code
+   */
+  public parent: Vorpal
+
+  public _pipeFn: Function
+
   /**
    * Initialize a new `Session` instance.
    *
@@ -28,12 +31,11 @@ export default class Session extends EventEmitter {
    * @api public
    */
 
-  constructor (options) {
+  constructor (
+    public vorpal: Vorpal,
+  ) {
     super()
-    options = options || {}
-    this.id = options.id || this._guid()
-    this.parent = options.parent || undefined
-    this.user = options.user || 'guest'
+    this.parent = vorpal
   }
 
   /**
@@ -45,8 +47,26 @@ export default class Session extends EventEmitter {
    * @return {Session}
    * @api public
    */
+
+  /**
+   * Receives and runs logging through
+   * a piped function is one is provided
+   * through ui.pipe(). Pauses any active
+   * prompts, logs the data and then if
+   * paused, resumes the prompt.
+   *
+   * @return {UI}
+   * @api public
+   */
+
   public log (...args) {
-    this.parent.ui.log(...args)
+    args = typeof this._pipeFn === 'function'
+      ? this._pipeFn(args)
+      : args
+    if (args.length === 0 || args[0] === '') {
+      return this
+    }
+    console.info(...args)
     return this
   }
 
@@ -60,7 +80,7 @@ export default class Session extends EventEmitter {
    */
 
   public help (command) {
-    this.log(this.parent._commandHelp(command || ''))
+    this.log(this.vorpal._commandHelp(command || ''))
   }
 
   /**
@@ -97,37 +117,6 @@ export default class Session extends EventEmitter {
       }
     }
 
-    // Called when command is cancelled
-    this.cancelCommands = function () {
-      const callCancel = function (commandInstanceInner) {
-        if (typeof commandInstanceInner.commandObject._cancel === 'function') {
-          commandInstanceInner.commandObject._cancel.call(commandInstanceInner)
-        }
-
-        if (commandInstanceInner.downstream) {
-          callCancel(commandInstanceInner.downstream)
-        }
-      }
-
-      callCancel(wrapper.commandInstance)
-
-      // Check if there is a cancel method on the promise
-      if (res && (typeof res.cancel === 'function')) {
-        res.cancel(wrapper.commandInstance)
-      }
-
-      self.removeListener('vorpal_command_cancel', self.cancelCommands)
-      self.cancelCommands = undefined
-      self._commandSetCallback = undefined
-      self._registeredCommands = 0
-      self._completedCommands = 0
-      self.parent.emit('client_command_cancelled', { command: wrapper.command })
-
-      cbk(wrapper)
-    }
-
-    this.on('vorpal_command_cancel', self.cancelCommands)
-
     // Gracefully handles all instances of the command completing.
     this._commandSetCallback = () => {
       const err = response.error
@@ -143,13 +132,11 @@ export default class Session extends EventEmitter {
           stack = err
         }
         self.log(stack)
-        self.parent.emit('client_command_error', { command: wrapper.command, error: err })
+        self.vorpal.emit('client_command_error', { command: wrapper.command, error: err })
       } else {
-        self.parent.emit('client_command_executed', { command: wrapper.command })
+        self.vorpal.emit('client_command_executed', { command: wrapper.command })
       }
 
-      self.removeListener('vorpal_command_cancel', self.cancelCommands)
-      self.cancelCommands = undefined
       cbk(wrapper, err, data, argus)
       sendDones(commandInstance)
     }
@@ -190,7 +177,7 @@ export default class Session extends EventEmitter {
 
     // If the command as declared by the user
     // returns a promise, handle accordingly.
-    if (res && (typeof res.then === 'function')) {
+    if (res instanceof Promise) {
       res
         .then(function (data) {
           onCompletion(wrapper, undefined, data)
@@ -241,20 +228,6 @@ export default class Session extends EventEmitter {
     return this
   }
 
-  /**
-   * Generates random GUID for Session ID.
-   *
-   * @return {GUID}
-   * @api private
-   */
-
-  public _guid () {
-    function s4 () {
-      return Math.floor((1 + Math.random()) * 0x10000)
-        .toString(16)
-        .substring(1)
-    }
-    return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4()
-  }
-
 }
+
+export default Session

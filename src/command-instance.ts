@@ -1,6 +1,7 @@
 import { CommandArgs } from './types/types'
 
 import { Command } from './command'
+import { Session } from './session'
 
 export interface CommandInstanceOptions {
   commandWrapper?: any;
@@ -17,7 +18,7 @@ export class CommandInstance {
   public args: CommandArgs;
   public commandObject: any;
   public command: Command;
-  public session: any;
+  public session: Session
   public parent: any;
   public callback: any;
   public downstream: CommandInstance;
@@ -42,7 +43,7 @@ export class CommandInstance {
     this.args = args
     this.commandWrapper = commandWrapper
     this.session = commandWrapper.session
-    this.parent = this.session.parent
+    this.parent = this.session.options.vorpal
     this.callback = callback
     this.downstream = downstream
   }
@@ -57,7 +58,7 @@ export class CommandInstance {
       this.session.registerCommand()
       this.downstream.args.stdin = args
       const onComplete = (err?: Error) => {
-        if (this.session.isLocal() && err) {
+        if (err) {
           this.session.log(err.stack || err)
           this.session.parent.emit('client_command_error', {
             command: this.downstream.command,
