@@ -1,8 +1,8 @@
-import chalk from 'chalk';
-import {EventEmitter} from 'events';
-import inquirer from 'inquirer';
-import logUpdate from 'log-update';
-import {noop, isFunction, isUndefined} from 'lodash';
+import chalk from 'chalk'
+import { EventEmitter } from 'events'
+import inquirer from 'inquirer'
+import logUpdate from 'log-update'
+import { noop, isFunction, isUndefined } from 'lodash'
 
 interface Redraw {
   (str: string): UI;
@@ -11,6 +11,7 @@ interface Redraw {
 }
 
 class UI extends EventEmitter {
+
   private _activePrompt;
   private parent;
   private _midPrompt: boolean;
@@ -34,133 +35,133 @@ class UI extends EventEmitter {
    *
    * @api private
    */
-  constructor() {
-    super();
-    const self = this;
+  constructor () {
+    super()
+    const self = this
 
     // Attached vorpal instance. The UI can
     // only attach to one instance of Vorpal
     // at a time, and directs all events to that
     // instance.
-    this.parent = undefined;
+    this.parent = undefined
 
     // Hook to reference active inquirer prompt.
-    this._activePrompt = undefined;
+    this._activePrompt = undefined
 
     // Fail-safe to ensure there is no double
     // prompt in odd situations.
-    this._midPrompt = false;
+    this._midPrompt = false
 
     // Handle for inquirer's prompt.
-    this.inquirer = inquirer;
+    this.inquirer = inquirer
 
     // prompt history from inquirer
-    this.inquirerStdout = [];
+    this.inquirerStdout = []
 
     // Whether a prompt is currently in cancel mode.
-    this._cancelled = false;
+    this._cancelled = false
 
     // Middleware for piping stdout through.
-    this._pipeFn = undefined;
+    this._pipeFn = undefined
 
     // custom logger disabled for test
-    this._log = process.env.NODE_ENV === 'test' ? noop : console.log.bind(console);
+    this._log = process.env.NODE_ENV === 'test' ? noop : console.info.bind(console)
 
     // Custom function on sigint event.
-    this._sigintCalled = false;
-    this._sigintCount = 0;
+    this._sigintCalled = false
+    this._sigintCount = 0
     this._sigint = () => {
       if (this._sigintCount > 1) {
-        this.parent.emit('vorpal_exit');
-        process.exit(0);
+        this.parent.emit('vorpal_exit')
+        process.exit(0)
       } else {
-        const text = this.input();
+        const text = this.input()
         if (!this.parent) {
           // If Vorpal isn't shown, just exit.
-          process.exit(0);
+          process.exit(0)
         } else if (this.parent.session.cancelCommands) {
           // There are commands running if
           // cancelCommands function is available.
-          this.imprint();
-          this.submit();
-          this._sigintCalled = false;
-          this._sigintCount = 0;
-          this.parent.session.emit('vorpal_command_cancel');
+          this.imprint()
+          this.submit()
+          this._sigintCalled = false
+          this._sigintCount = 0
+          this.parent.session.emit('vorpal_command_cancel')
         } else if (String(text).trim() !== '') {
-          this.imprint();
-          this.submit();
-          this._sigintCalled = false;
-          this._sigintCount = 0;
+          this.imprint()
+          this.submit()
+          this._sigintCalled = false
+          this._sigintCount = 0
         } else {
-          this._sigintCalled = false;
-          this.delimiter(' ');
-          this.submit();
-          this.log('(^C again to quit)');
+          this._sigintCalled = false
+          this.delimiter(' ')
+          this.submit()
+          this.log('(^C again to quit)')
         }
       }
-    };
+    }
 
     process.stdin.on('keypress', (letter, key) => {
-      key = key || {};
+      key = key || {}
       if (
-        key.ctrl === true &&
-        key.shift === false &&
-        key.meta === false &&
-        ['c', 'C'].indexOf(key.name) > -1
+        key.ctrl === true
+        && key.shift === false
+        && key.meta === false
+        && ['c', 'C'].indexOf(key.name) > -1
       ) {
-        this._sigintCount++;
+        this._sigintCount++
         if (this._sigint !== undefined && !this._sigintCalled) {
-          this._sigintCalled = true;
-          this._sigint.call(self.parent);
-          this._sigintCalled = false;
+          this._sigintCalled = true
+          this._sigint.call(self.parent)
+          this._sigintCalled = false
         }
       } else {
-        this._sigintCalled = false;
-        this._sigintCount = 0;
+        this._sigintCalled = false
+        this._sigintCount = 0
       }
-    });
+    })
 
     // Extend the render function to steal the active prompt object,
     // as inquirer doesn't expose it and we need it.
-    const prompts = ['input', 'checkbox', 'confirm', 'expand', 'list', 'password', 'rawlist'];
+    const prompts = ['input', 'checkbox', 'confirm', 'expand', 'list', 'password', 'rawlist']
 
     for (const promptType of prompts) {
       // Add method to Inquirer to get type of prompt.
-      inquirer.prompt.prompts[promptType].prototype.getType = function() {
-        return promptType;
-      };
+      inquirer.prompt.prompts[promptType].prototype.getType = function () {
+        return promptType
+      }
 
       // Hook in to steal Inquirer's keypress.
-      inquirer.prompt.prompts[promptType].prototype.onKeypress = function(e) {
+      inquirer.prompt.prompts[promptType].prototype.onKeypress = function (e) {
         // Inquirer seems to have a bug with release v0.10.1
         // (not 0.10.0 though) that triggers keypresses for
         // the previous prompt in addition to the current one.
         // So if the prompt is answered, shut it up.
         if (this.status && this.status === 'answered') {
-          return;
+          return
         }
-        self._activePrompt = this;
-        self.parent.emit('client_keypress', e);
-        self._keypressHandler(e, this);
-      };
+        self._activePrompt = this
+        self.parent.emit('client_keypress', e)
+        self._keypressHandler(e, this)
+      }
 
       // Add hook to render method.
-      const render = inquirer.prompt.prompts[promptType].prototype.render;
-      inquirer.prompt.prompts[promptType].prototype.render = function(...args) {
-        self._activePrompt = this;
-        return render.apply(this, args);
-      };
+      const render = inquirer.prompt.prompts[promptType].prototype.render
+      inquirer.prompt.prompts[promptType].prototype.render = function (...args) {
+        self._activePrompt = this
+        return render.apply(this, args)
+      }
     }
 
     // Sigint handling - make it more graceful.
     const onSigInt = () => {
       if (isFunction(this._sigint) && !this._sigintCalled) {
-        this._sigintCalled = true;
-        this._sigint.call(this.parent);
+        this._sigintCalled = true
+        this._sigint.call(this.parent)
       }
-    };
-    process.on('SIGINT', onSigInt);
-    process.on('SIGTERM', onSigInt);
+    }
+    process.on('SIGINT', onSigInt)
+    process.on('SIGTERM', onSigInt)
   }
 
   /**
@@ -171,13 +172,13 @@ class UI extends EventEmitter {
    * @api public
    */
 
-  public sigint(fn) {
+  public sigint (fn) {
     if (isFunction(fn)) {
-      this._sigint = fn;
+      this._sigint = fn
     } else {
-      throw new Error('vorpal.ui.sigint must be passed in a valid function.');
+      throw new Error('vorpal.ui.sigint must be passed in a valid function.')
     }
-    return this;
+    return this
   }
 
   /**
@@ -188,33 +189,35 @@ class UI extends EventEmitter {
    * @api public
    */
 
-  public prompt(options, cb) {
-    let prompt;
-    options = options || {};
+  public prompt (options, cb) {
+    let prompt
+    options = options || {}
     if (!this.parent) {
-      return prompt;
+      return prompt
     }
     if (options.delimiter) {
-      this.setDelimiter(options.delimiter);
+      this.setDelimiter(options.delimiter)
     }
     if (options.message) {
-      this.setDelimiter(options.message);
+      this.setDelimiter(options.message)
     }
     if (this._midPrompt) {
-      this._log('Prompt called when mid prompt...');
-      throw new Error('UI Prompt called when already mid prompt.');
+      this._log('Prompt called when mid prompt...')
+      throw new Error('UI Prompt called when already mid prompt.')
     }
-    this._midPrompt = true;
+    this._midPrompt = true
     try {
       prompt = inquirer.prompt(options).then(result => {
-        this.inquirerStdout = [];
-        this._midPrompt = false;
+        this.inquirerStdout = []
+        this._midPrompt = false
         if (this._cancel === true) {
-          this._cancel = false;
+          this._cancel = false
         } else {
-          cb(result);
+          // eslint-disable-next-line promise/no-callback-in-promise
+          cb(result)
         }
-      });
+        return undefined
+      })
 
       // Temporary hack. We need to pull the active
       // prompt from inquirer as soon as possible,
@@ -224,11 +227,11 @@ class UI extends EventEmitter {
       // fire an event instead.
       setTimeout(() => {
         // this._activePrompt = prompt._activePrompt;
-      }, 100);
+      }, 100)
     } catch (e) {
-      this._log('Vorpal Prompt error:', e);
+      this._log('Vorpal Prompt error:', e)
     }
-    return prompt;
+    return prompt
   }
 
   /**
@@ -239,31 +242,31 @@ class UI extends EventEmitter {
    * @api public
    */
 
-  public midPrompt() {
-    const mid = this._midPrompt === true && this.parent !== undefined;
-    return mid;
+  public midPrompt () {
+    const mid = this._midPrompt === true && this.parent !== undefined
+    return mid
   }
 
-  public setDelimiter(str) {
-    const self = this;
+  public setDelimiter (str) {
+    const self = this
     if (!this.parent) {
-      return;
+      return
     }
-    str = String(str).trim() + ' ';
-    this._lastDelimiter = str;
-    inquirer.prompt.prompts.password.prototype.getQuestion = function() {
-      self._activePrompt = this;
-      return this.opt.message;
-    };
-    inquirer.prompt.prompts.input.prototype.getQuestion = function() {
-      self._activePrompt = this;
-      let message = this.opt.message;
+    str = String(str).trim() + ' '
+    this._lastDelimiter = str
+    inquirer.prompt.prompts.password.prototype.getQuestion = function () {
+      self._activePrompt = this
+      return this.opt.message
+    }
+    inquirer.prompt.prompts.input.prototype.getQuestion = function () {
+      self._activePrompt = this
+      let message = this.opt.message
       if ((this.opt.default || this.opt.default === false) && this.status !== 'answered') {
-        message += chalk.dim('(' + this.opt.default + ') ');
+        message += chalk.dim('(' + this.opt.default + ') ')
       }
-      self.inquirerStdout.push(message);
-      return message;
-    };
+      self.inquirerStdout.push(message)
+      return message
+    }
   }
 
   /**
@@ -275,27 +278,28 @@ class UI extends EventEmitter {
    * @api private
    */
 
-  public _keypressHandler(e, prompt) {
+  public _keypressHandler (e, prompt) {
     // Remove tab characters from user input.
-    prompt.rl.line = prompt.rl.line.replace(/\t+/, '');
+    prompt.rl.line = prompt.rl.line.replace(/\t+/, '')
 
     // Mask passwords.
-    const line =
-      prompt.getType() !== 'password' ? prompt.rl.line : '*'.repeat(prompt.rl.line.length);
+    const line
+      = prompt.getType() !== 'password' ? prompt.rl.line : '*'.repeat(prompt.rl.line.length)
 
     // Re-write render function.
-    const width = prompt.rl.line.length;
-    const newWidth = prompt.rl.line.length;
-    const diff = newWidth - width;
-    prompt.rl.cursor += diff;
-    let message = prompt.getQuestion();
-    const addition = prompt.status === 'answered' ? chalk.cyan(prompt.answer) : line;
-    message += addition;
-    prompt.screen.render(message);
+    const width = prompt.rl.line.length
+    const newWidth = prompt.rl.line.length
+    const diff = newWidth - width
+    prompt.rl.cursor += diff
+    let message = prompt.getQuestion()
+    const addition = prompt.status === 'answered' ? chalk.cyan(prompt.answer) : line
+    message += addition
+    prompt.screen.render(message)
 
-    const key = (e.key || {}).name;
-    const value = prompt ? String(line) : undefined;
-    this.emit('vorpal_ui_keypress', {key, value, e});
+    const key = (e.key || {}).name
+    const value = prompt ? String(line) : undefined
+    // eslint-disable-next-line sort-keys
+    this.emit('vorpal_ui_keypress', { key, value, e })
   }
 
   /**
@@ -306,24 +310,24 @@ class UI extends EventEmitter {
    * @api public
    */
 
-  public pause() {
+  public pause () {
     if (!this.parent) {
-      return false;
+      return false
     }
     if (!this._activePrompt) {
-      return false;
+      return false
     }
     if (!this._midPrompt) {
-      return false;
+      return false
     }
-    const val = this._lastDelimiter + this._activePrompt.rl.line;
-    this._midPrompt = false;
-    const rl = this._activePrompt.screen.rl;
-    const screen = this._activePrompt.screen;
-    rl.output.unmute();
-    screen.clean();
-    rl.output.write('');
-    return val;
+    const val = this._lastDelimiter + this._activePrompt.rl.line
+    this._midPrompt = false
+    const rl = this._activePrompt.screen.rl
+    const screen = this._activePrompt.screen
+    rl.output.unmute()
+    screen.clean()
+    rl.output.write('')
+    return val
   }
 
   /**
@@ -336,21 +340,21 @@ class UI extends EventEmitter {
    * @api public
    */
 
-  public resume(val) {
+  public resume (val) {
     if (!this.parent) {
-      return this;
+      return this
     }
-    val = val || '';
+    val = val || ''
     if (!this._activePrompt) {
-      return this;
+      return this
     }
     if (this._midPrompt) {
-      return this;
+      return this
     }
-    const rl = this._activePrompt.screen.rl;
-    rl.output.write(val);
-    this._midPrompt = true;
-    return this;
+    const rl = this._activePrompt.screen.rl
+    rl.output.write(val)
+    this._midPrompt = true
+    return this
   }
 
   /**
@@ -360,13 +364,13 @@ class UI extends EventEmitter {
    * @api public
    */
 
-  public cancel() {
+  public cancel () {
     if (this.midPrompt()) {
-      this._cancel = true;
-      this.submit();
-      this._midPrompt = false;
+      this._cancel = true
+      this.submit()
+      this._midPrompt = false
     }
-    return this;
+    return this
   }
 
   /**
@@ -377,11 +381,11 @@ class UI extends EventEmitter {
    * @api public
    */
 
-  public attach(vorpal) {
-    this.parent = vorpal;
-    this.refresh();
-    this.parent._prompt();
-    return this;
+  public attach (vorpal) {
+    this.parent = vorpal
+    this.refresh()
+    this.parent._prompt()
+    return this
   }
 
   /**
@@ -392,11 +396,11 @@ class UI extends EventEmitter {
    * @api public
    */
 
-  public detach(vorpal) {
+  public detach (vorpal) {
     if (vorpal === this.parent) {
-      this.parent = undefined;
+      this.parent = undefined
     }
-    return this;
+    return this
   }
 
   /**
@@ -410,23 +414,23 @@ class UI extends EventEmitter {
    * @api public
    */
 
-  public log(...args) {
-    args = isFunction(this._pipeFn) ? this._pipeFn(args) : args;
+  public log (...args) {
+    args = isFunction(this._pipeFn) ? this._pipeFn(args) : args
     if (args.length === 0 || args[0] === '') {
-      return this;
+      return this
     }
     if (this.midPrompt()) {
-      const data = this.pause();
-      this._log(...args);
+      const data = this.pause()
+      this._log(...args)
       if (!isUndefined(data) && data !== false) {
-        this.resume(data);
+        this.resume(data)
       } else {
-        this._log("Log got back 'false' as data. This shouldn't happen.", data);
+        this._log("Log got back 'false' as data. This shouldn't happen.", data)
       }
     } else {
-      this._log(...args);
+      this._log(...args)
     }
-    return this;
+    return this
   }
 
   /**
@@ -437,14 +441,14 @@ class UI extends EventEmitter {
    * @api public
    */
 
-  public submit() {
+  public submit () {
     if (this._activePrompt) {
       // this._activePrompt.screen.onClose();
-      this._activePrompt.rl.emit('line');
+      this._activePrompt.rl.emit('line')
       // this._activePrompt.onEnd({isValid: true, value: value});
       // to do - I don't know a good way to do this.
     }
-    return this;
+    return this
   }
 
   /**
@@ -456,17 +460,17 @@ class UI extends EventEmitter {
    * @api public
    */
 
-  public delimiter(str?) {
+  public delimiter (str?) {
     if (!this._activePrompt) {
-      return this;
+      return this
     }
-    const prompt = this._activePrompt;
+    const prompt = this._activePrompt
     if (str === undefined) {
-      return prompt.opt.message;
+      return prompt.opt.message
     }
-    prompt.opt.message = str;
-    this.refresh();
-    return this;
+    prompt.opt.message = str
+    this.refresh()
+    return this
   }
 
   /**
@@ -479,24 +483,24 @@ class UI extends EventEmitter {
    * @api public
    */
 
-  public input(str?) {
+  public input (str?) {
     if (!this._activePrompt) {
-      return undefined;
+      return undefined
     }
-    const prompt = this._activePrompt;
+    const prompt = this._activePrompt
     if (str === undefined) {
-      return prompt.rl.line;
+      return prompt.rl.line
     }
-    const width = prompt.rl.line.length;
-    prompt.rl.line = str;
-    const newWidth = prompt.rl.line.length;
-    const diff = newWidth - width;
-    prompt.rl.cursor += diff;
-    let message = prompt.getQuestion();
-    const addition = prompt.status === 'answered' ? chalk.cyan(prompt.answer) : prompt.rl.line;
-    message += addition;
-    prompt.screen.render(message);
-    return this;
+    const width = prompt.rl.line.length
+    prompt.rl.line = str
+    const newWidth = prompt.rl.line.length
+    const diff = newWidth - width
+    prompt.rl.cursor += diff
+    let message = prompt.getQuestion()
+    const addition = prompt.status === 'answered' ? chalk.cyan(prompt.answer) : prompt.rl.line
+    message += addition
+    prompt.screen.render(message)
+    return this
   }
 
   /**
@@ -506,14 +510,14 @@ class UI extends EventEmitter {
    * @api public
    */
 
-  public imprint() {
+  public imprint () {
     if (!this.parent) {
-      return this;
+      return this
     }
-    const val = this._activePrompt.rl.line;
-    const delimiter = this._lastDelimiter || this.delimiter() || '';
-    this.log(delimiter + val);
-    return this;
+    const val = this._activePrompt.rl.line
+    const delimiter = this._lastDelimiter || this.delimiter() || ''
+    this.log(delimiter + val)
+    return this
   }
 
   /**
@@ -524,14 +528,14 @@ class UI extends EventEmitter {
    * @api private
    */
 
-  public refresh() {
+  public refresh () {
     if (!this.parent || !this._activePrompt) {
-      return this;
+      return this
     }
-    this._activePrompt.screen.clean();
-    this._activePrompt.render();
-    this._activePrompt.rl.output.write(this._activePrompt.rl.line);
-    return this;
+    this._activePrompt.screen.clean()
+    this._activePrompt.render()
+    this._activePrompt.rl.output.write(this._activePrompt.rl.line)
+    return this
   }
 
   /**
@@ -542,17 +546,18 @@ class UI extends EventEmitter {
    * @api public
    */
 
-  public redraw: Redraw = function(str) {
-    logUpdate(str);
-    return this;
+  public redraw: Redraw = function (str) {
+    logUpdate(str)
+    return this
   };
+
 }
 
 /**
  * Initialize singleton.
  */
 
-const ui = new UI();
+const ui = new UI()
 
 /**
  * Clears logging from `ui.redraw`
@@ -562,10 +567,10 @@ const ui = new UI();
  * @api public
  */
 
-ui.redraw.clear = function() {
-  logUpdate.clear();
-  return ui;
-};
+ui.redraw.clear = function () {
+  logUpdate.clear()
+  return ui
+}
 
 /**
  * Prints logging from `ui.redraw`
@@ -575,11 +580,11 @@ ui.redraw.clear = function() {
  * @api public
  */
 
-ui.redraw.done = function() {
-  logUpdate.done();
-  ui.refresh();
-  return ui;
-};
+ui.redraw.done = function () {
+  logUpdate.done()
+  ui.refresh()
+  return ui
+}
 
 // FIXME
 /**
@@ -600,16 +605,16 @@ ui.redraw.done = function() {
  * total mess. So forgive me.
  */
 
-global.__vorpal = global.__vorpal || {};
+global.__vorpal = global.__vorpal || {}
 global.__vorpal.ui = global.__vorpal.ui || {
   exists: false,
-  exports: undefined
-};
+  exports: undefined,
+}
 
 if (!global.__vorpal.ui.exists) {
-  global.__vorpal.ui.exists = true;
-  global.__vorpal.ui.exports = ui;
+  global.__vorpal.ui.exists = true
+  global.__vorpal.ui.exports = ui
 }
 // TODO : check this is still needed in TS?
 
-export default global.__vorpal.ui.exports;
+export default global.__vorpal.ui.exports

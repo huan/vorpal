@@ -1,8 +1,8 @@
-import {EventEmitter} from 'events';
-import {Arg} from '../command';
-import History from '../history';
-import Option from '../option';
-import {IAutocompleteConfig} from './autocomplete';
+import { EventEmitter } from 'events'
+import { Arg } from '../command'
+import Option from '../option'
+
+import { Vorpal } from '../vorpal'
 
 export type ArgTypes = {
   [P in 'string' | 'boolean']: unknown;
@@ -13,10 +13,10 @@ type ValidateFn = (instance: IcommandInstance, args: CommandArgs) => string;
 type CancelFn = (instance: IcommandInstance) => void;
 type FnFn = (args: Arg[], onComplete: (err?: Error) => void) => void;
 
-export interface ICommand extends EventEmitter {
-  commands: ICommand[];
+export interface CCommand extends EventEmitter {
+  commands: CCommand[];
   options: Option[];
-  parent: IVorpal;
+  parent: Vorpal;
   _name: string;
   _types: ArgTypes;
   _parse: ParseFn;
@@ -31,37 +31,35 @@ export interface ICommand extends EventEmitter {
   _help: Function;
   _aliases: string[];
   _allowUnknownOptions: boolean;
-  _autocomplete: IAutocompleteConfig;
   _delimiter: string;
-  option(flags, description, autocomplete?): ICommand;
-  action(fn): ICommand;
-  use(fn): ICommand;
-  validate(fn): ICommand;
+  option(flags, description, autocomplete?): CCommand;
+  action(fn): CCommand;
+  use(fn): CCommand;
+  validate(fn): CCommand;
 
-  cancel(fn: CancelFn): ICommand;
+  cancel(fn: CancelFn): CCommand;
   done(fn);
-  autocomplete(obj: IAutocompleteConfig);
-  init(fn): ICommand;
+  init(fn): CCommand;
   delimiter(delimiter);
   types(types);
-  alias(...aliases): ICommand;
-  description(str): ICommand;
+  alias(...aliases): CCommand;
+  description(str): CCommand;
   remove();
   arguments(desc);
   helpInformation();
   hidden();
   allowUnknownOptions(allowUnknownOptions);
-  usage(str?): ICommand;
+  usage(str?): CCommand;
   optionHelp();
   help(fn);
-  parse: (fn: ParseFn) => ICommand;
-  after(fn): ICommand;
+  parse: (fn: ParseFn) => CCommand;
+  after(fn): CCommand;
 }
 
 export interface IcommandInstance {
   commandWrapper?: any;
   args?: CommandArgs;
-  commandObject?: ICommand;
+  commandObject?: CCommand;
   command?: any;
   callback?: any;
   downstream?: IcommandInstance;
@@ -70,9 +68,9 @@ export interface IcommandInstance {
 // The entire command, with arguments and options, entered in the command line
 export type InputCommand = string;
 
-export interface IMatchParts<T extends CommandArgs | string> {
+export interface MMatchParts<T extends CommandArgs | string> {
   args: T;
-  command?: ICommand;
+  command?: CCommand;
 }
 
 export type CommandArgs = {
@@ -87,7 +85,7 @@ interface CommandArgsOptions {
 
 export type IParsedCommand = {
   command: InputCommand;
-  match?: ICommand;
+  match?: CCommand;
   matchArgs: string | CommandArgs;
   pipes: string[];
 };

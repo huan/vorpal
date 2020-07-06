@@ -1,15 +1,16 @@
-import {clone} from 'lodash';
-import {LocalStorage} from 'node-localstorage';
-import os from 'os';
-import {normalize, join} from 'path';
+import { clone } from 'lodash'
+import { LocalStorage } from 'node-localstorage'
+import os from 'os'
+import { normalize, join } from 'path'
 
 // Number of command histories kept in persistent storage
-const HISTORY_SIZE = 500;
+const HISTORY_SIZE = 500
 
-const temp = normalize(join(os.tmpdir(), '/.local_storage'));
-const DEFAULT_STORAGE_PATH = temp;
+const temp = normalize(join(os.tmpdir(), '/.local_storage'))
+const DEFAULT_STORAGE_PATH = temp
 
 export default class History {
+
   public _localStorage?: LocalStorage;
   public _inMode?: boolean;
 
@@ -33,15 +34,15 @@ export default class History {
    * Initialize the history with local storage data
    * Called from setId when history id is set
    */
-  public _init() {
+  public _init () {
     if (!this._storageKey) {
-      return;
+      return
     }
 
     // Load history from local storage
-    const persistedHistory = JSON.parse(this._localStorage.getItem(this._storageKey));
+    const persistedHistory = JSON.parse(this._localStorage.getItem(this._storageKey))
     if (Array.isArray(persistedHistory)) {
-      Array.prototype.push.apply(this._hist, persistedHistory);
+      Array.prototype.push.apply(this._hist, persistedHistory)
     }
   }
 
@@ -50,14 +51,14 @@ export default class History {
    * Calls init internally to initialize
    * the history with the id.
    */
-  public setId(id) {
+  public setId (id) {
     // Initialize a localStorage instance with default
     // path if it is not initialized
     if (!this._localStorage) {
-      this._localStorage = new LocalStorage(DEFAULT_STORAGE_PATH);
+      this._localStorage = new LocalStorage(DEFAULT_STORAGE_PATH)
     }
-    this._storageKey = 'cmd_history_' + id;
-    this._init();
+    this._storageKey = 'cmd_history_' + id
+    this._init()
   }
 
   /**
@@ -66,9 +67,9 @@ export default class History {
    *
    * @param path
    */
-  public setStoragePath(path) {
+  public setStoragePath (path) {
     if (!this._localStorage) {
-      this._localStorage = new LocalStorage(path);
+      this._localStorage = new LocalStorage(path)
     }
   }
 
@@ -77,10 +78,10 @@ export default class History {
    *
    * @return {String}
    */
-  public getPreviousHistory() {
-    this._histCtr++;
-    this._histCtr = this._histCtr > this._hist.length ? this._hist.length : this._histCtr;
-    return this._hist[this._hist.length - this._histCtr];
+  public getPreviousHistory () {
+    this._histCtr++
+    this._histCtr = this._histCtr > this._hist.length ? this._hist.length : this._histCtr
+    return this._hist[this._hist.length - this._histCtr]
   }
 
   /**
@@ -88,16 +89,16 @@ export default class History {
    *
    * @return {String}
    */
-  public getNextHistory() {
-    this._histCtr--;
+  public getNextHistory () {
+    this._histCtr--
 
     // Return empty prompt if the we dont have any history to show
     if (this._histCtr < 1) {
-      this._histCtr = 0;
-      return '';
+      this._histCtr = 0
+      return ''
     }
 
-    return this._hist[this._hist.length - this._histCtr];
+    return this._hist[this._hist.length - this._histCtr]
   }
 
   /**
@@ -105,8 +106,8 @@ export default class History {
    *
    * @return {String}
    */
-  public peek(depth = 0) {
-    return this._hist[this._hist.length - 1 - depth];
+  public peek (depth = 0) {
+    return this._hist[this._hist.length - 1 - depth]
   }
 
   /**
@@ -114,63 +115,64 @@ export default class History {
    *
    * @param cmd
    */
-  public newCommand(cmd) {
+  public newCommand (cmd) {
     // Always reset history when new command is executed.
-    this._histCtr = 0;
+    this._histCtr = 0
 
     // Don't store command in history if it's a duplicate.
     if (this._hist[this._hist.length - 1] === cmd) {
-      return;
+      return
     }
 
     // Push into history.
-    this._hist.push(cmd);
+    this._hist.push(cmd)
 
     // Only persist history when not in mode
     if (this._storageKey && !this._inMode) {
-      let persistedHistory = this._hist;
-      const historyLen = this._hist.length;
+      let persistedHistory = this._hist
+      const historyLen = this._hist.length
       if (historyLen > HISTORY_SIZE) {
-        persistedHistory = this._hist.slice(historyLen - HISTORY_SIZE - 1, historyLen - 1);
+        persistedHistory = this._hist.slice(historyLen - HISTORY_SIZE - 1, historyLen - 1)
       }
 
       // Add to local storage
-      this._localStorage.setItem(this._storageKey, JSON.stringify(persistedHistory));
+      this._localStorage.setItem(this._storageKey, JSON.stringify(persistedHistory))
     }
   }
 
   /**
    * Called when entering a mode
    */
-  public enterMode() {
+  public enterMode () {
     // Reassign the command history to a
     // cache, replacing it with a blank
     // history for the mode.
-    this._histCache = clone(this._hist);
-    this._histCtrCache = parseFloat(this._histCtr.toString());
-    this._hist = [];
-    this._histCtr = 0;
-    this._inMode = true;
+    this._histCache = clone(this._hist)
+    this._histCtrCache = parseFloat(this._histCtr.toString())
+    this._hist = []
+    this._histCtr = 0
+    this._inMode = true
   }
 
   /**
    * Called when exiting a mode
    */
-  public exitMode() {
-    this._hist = this._histCache;
-    this._histCtr = this._histCtrCache;
-    this._histCache = [];
-    this._histCtrCache = 0;
-    this._inMode = false;
+  public exitMode () {
+    this._hist = this._histCache
+    this._histCtr = this._histCtrCache
+    this._histCache = []
+    this._histCtrCache = 0
+    this._inMode = false
   }
 
   /**
    * Clears the command history
    * (Currently only used in unit test)
    */
-  public clear() {
+  public clear () {
     if (this._storageKey) {
-      this._localStorage.removeItem(this._storageKey);
+      this._localStorage.removeItem(this._storageKey)
     }
   }
+
 }

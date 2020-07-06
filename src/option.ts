@@ -2,6 +2,7 @@
  * Expose `Option`.
  */
 export default class Option {
+
   public required: number;
   public optional: number;
   public bool: boolean;
@@ -18,17 +19,17 @@ export default class Option {
    * @return {Option}
    * @api public
    */
-  constructor(_flags: string, public description: string = '', public autocomplete) {
-    this.required = _flags.includes('<') ? _flags.indexOf('<') : 0;
-    this.optional = _flags.includes('[') ? _flags.indexOf('[') : 0;
-    this.bool = !_flags.includes('-no-');
-    this.autocomplete = autocomplete;
+  constructor (_flags: string, public description: string = '', public autocomplete) {
+    this.required = _flags.includes('<') ? _flags.indexOf('<') : 0
+    this.optional = _flags.includes('[') ? _flags.indexOf('[') : 0
+    this.bool = !_flags.includes('-no-')
+    this.autocomplete = autocomplete
 
-    this.flags = _flags.split(/[ ,|]+/);
+    this.flags = _flags.split(/[ ,|]+/)
     if (this.flags.length > 1 && !/^[[<]/.test(this.flags[1])) {
-      this.assignFlag(this.flags.shift());
+      this.assignFlag(this.flags.shift())
     }
-    this.assignFlag(this.flags.shift());
+    this.assignFlag(this.flags.shift())
   }
 
   /**
@@ -38,11 +39,11 @@ export default class Option {
    * @api private
    */
 
-  public name() {
+  public name () {
     if (this.long !== undefined) {
-      return this.long.replace('--', '').replace('no-', '');
+      return this.long.replace('--', '').replace('no-', '')
     }
-    return this.short.replace('-', '');
+    return this.short.replace('-', '')
   }
 
   /**
@@ -53,8 +54,8 @@ export default class Option {
    * @api private
    */
 
-  public is(arg) {
-    return arg === this.short || arg === this.long;
+  public is (arg) {
+    return arg === this.short || arg === this.long
   }
 
   /**
@@ -64,11 +65,12 @@ export default class Option {
    * @api private
    */
 
-  public assignFlag(flag) {
+  public assignFlag (flag) {
     if (flag.startsWith('--')) {
-      this.long = flag;
+      this.long = flag
     } else {
-      this.short = flag;
+      this.short = flag
     }
   }
+
 }

@@ -1,14 +1,14 @@
 /* eslint-disable sort-keys */
-import {ICommand, IMatchParts, InputCommand, IParsedCommand} from '../types/types'
+import { CCommand, MMatchParts, InputCommand, IParsedCommand } from '../types/types'
 
 /**
  * Run a raw command string, e.g. foo -bar against a given list of commands,
  * and if there is a match, parse the results.
  */
-export function matchCommand(
+export function matchCommand (
   commandName: InputCommand,
-  commands: ICommand[] = []
-): IMatchParts<string> {
+  commands: CCommand[] = []
+): MMatchParts<string> {
   const parts = String(commandName)
     .trim()
     .split(' ')
@@ -73,14 +73,14 @@ export function matchCommand(
 
   return {
     args: matchArgs,
-    command: match || null
+    command: match || null,
   }
 }
 
 /**
  * Prepares a command and all its parts for execution.
  */
-export function parseCommand (command: InputCommand, commands: ICommand[] = []): IParsedCommand {
+export function parseCommand (command: InputCommand, commands: CCommand[] = []): IParsedCommand {
   const parsed = {
     pipes: [],
     match: null,

@@ -4,7 +4,7 @@ import minimist from 'minimist'
 import Command from './command'
 import { CommandInstance } from './command-instance'
 import Session from './session'
-import { ICommand } from './types/types'
+import { CCommand } from './types/types'
 import ui from './ui'
 import * as utils from './utils'
 import commons from './vorpal-commons'
@@ -16,11 +16,11 @@ interface VorpalMeta {
   banner?: string,
 }
 
-export default class Vorpal extends EventEmitter {
+export class Vorpal extends EventEmitter {
 
   private meta: VorpalMeta
 
-  public commands: ICommand[]
+  public commands: CCommand[]
 
   private _command: any
 
@@ -62,6 +62,8 @@ export default class Vorpal extends EventEmitter {
 
     // Allow unix-like key value pair normalization to be turned off by toggling this switch on.
     this.isCommandArgKeyPairNormalized = true
+
+    this.meta = {}
 
     this._init()
   }
@@ -355,7 +357,7 @@ export default class Vorpal extends EventEmitter {
 
       // If we get a string back, it's a validation error.
       // Show help and return.
-      if (typeof item.args === 'string' || typeof item.args === 'object') {
+      if (typeof item.args === 'string' || typeof item.args !== 'object') {
         throwHelp(item, item.args)
         return callback(item, undefined, item.args)
       }
@@ -399,49 +401,6 @@ export default class Vorpal extends EventEmitter {
         return callback(item)
       }
 
-      // If this command throws us into a 'mode',
-      // prepare for it.
-      if (match._mode === true && !item.session._mode) {
-        // Assign vorpal to be in a 'mode'.
-        item.session._mode = item.command
-        // Execute the mode's `init` function
-        // instead of the `action` function.
-        item.fn = init
-        delete item.validate
-
-        item.session.modeDelimiter(delimiter)
-      } else if (item.session._mode) {
-        if (String(modeCommand).trim() === 'exit') {
-          return callback(item)
-        }
-        // This executes when actually in a 'mode'
-        // session. We now pass in the raw text of what
-        // is typed into the first param of `action`
-        // instead of arguments.
-        item.args = modeCommand
-      }
-
-      if (item.sync === true) {
-        // If we're running synchronous commands,
-        // we don't support piping.
-        let response
-        let error
-        try {
-          response = item.fn.call(
-            new CommandInstance({
-              downstream: undefined,
-              commandWrapper: item,
-              commandObject: item.commandObject,
-              args: item.args,
-            }),
-            item.args
-          )
-        } catch (e) {
-          error = e
-        }
-        return callback(item, error, response)
-      }
-
       // Builds commandInstance objects for every
       // command and piped command included in the
       // execution string.
@@ -464,8 +423,8 @@ export default class Vorpal extends EventEmitter {
         item.pipes[k].downstream = downstream
       }
 
-      item.session.execCommandSet(item, function (wrapper, err, data, argus) {
-        callback(wrapper, err, data, argus)
+      item.session.execCommandSet(item, function (wrapper, err, data) {
+        callback(wrapper, err, data)
       })
     } else {
       // If no command match, just return.
@@ -680,3 +639,5 @@ export default class Vorpal extends EventEmitter {
   }
 
 }
+
+export default Vorpal

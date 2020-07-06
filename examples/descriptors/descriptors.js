@@ -1,12 +1,11 @@
-var Vorpal = require('../../dist/vorpal').default;
+const { Vorpal } = require('../../dist/vorpal')
 var vorpal = new Vorpal()
-var chalk = vorpal.chalk;
 
 vorpal
-  .title(chalk.magenta('Vorpal'))
+  .title('Vorpal')
   .version('1.4.0')
-  .description(chalk.cyan('Conquer the command-line.'))
-  .banner(chalk.gray(`              (O)
+  .description('Conquer the command-line.')
+  .banner(`              (O)
               <M
    o          <M
   /| ......  /:M\\------------------------------------------------,,,,,,
@@ -14,7 +13,7 @@ vorpal
   \\| ^^^^^^  \\:W/------------------------------------------------''''''
    o          <W
               <W
-              (O)`));
+              (O)`);
 
 vorpal.command('build', 'Build the application.')
   .option('-d')
@@ -39,12 +38,10 @@ vorpal.command('compress', 'Compress assets.')
   });
 
 vorpal
-  .catch('', 'Displays the index view.')
+  .default('', 'Displays the index view.')
   .action(function (args, cb) {
     this.log(this.parent._commandHelp(args.command));
     cb();
   });
 
-vorpal
-  .delimiter('vorpal:')
-  .parse(process.argv);
+vorpal.exec('help')
