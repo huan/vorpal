@@ -4,7 +4,6 @@
  * through vorpal.use(module).
  */
 
-import { isFunction } from 'lodash'
 import { Vorpal } from './vorpal'
 import { CommandInstance } from 'command-instance'
 
@@ -23,7 +22,7 @@ export default function (vorpal: Vorpal) {
           command => command._name === String(args.command).trim()
         )
         if (commandWithName && !commandWithName._hidden) {
-          if (isFunction(commandWithName._help)) {
+          if (typeof commandWithName._help === 'function') {
             commandWithName._help(args.command, str => {
               this.log(str)
               cb()

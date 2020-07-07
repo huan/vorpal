@@ -1,15 +1,18 @@
 /* eslint-disable sort-keys */
-import { MMatchParts, InputCommand, IParsedCommand } from '../types/types'
-import { Command } from '../command'
+import {
+  MatchParts,
+  ParsedCommand,
+}                   from '../types/types'
+import { Command }  from '../command'
 
 /**
  * Run a raw command string, e.g. foo -bar against a given list of commands,
  * and if there is a match, parse the results.
  */
 export function matchCommand (
-  commandName: InputCommand,
+  commandName: string,
   commands: Command[] = []
-): MMatchParts<string> {
+): MatchParts<string> {
   const parts = String(commandName)
     .trim()
     .split(' ')
@@ -81,13 +84,13 @@ export function matchCommand (
 /**
  * Prepares a command and all its parts for execution.
  */
-export function parseCommand (command: InputCommand, commands: Command[] = []): IParsedCommand {
+export function parseCommand (command: string, commands: Command[] = []): ParsedCommand {
   const parsed = {
     pipes: [],
     match: null,
     matchArgs: '',
     command,
-  } as IParsedCommand
+  } as ParsedCommand
 
   let matchParts = matchCommand(command, commands)
 

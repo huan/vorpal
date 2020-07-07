@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events'
-import { camelCase, isFunction, isUndefined, isEmpty, isBoolean, isNil } from 'lodash'
+import camelCase from 'lodash.camelcase'
+
 import Option from './option'
 import { humanReadableArgName, pad } from './utils'
-
 import { Vorpal } from './vorpal'
 
 export interface Arg {
@@ -13,16 +13,14 @@ export interface Arg {
 
 export class Command extends EventEmitter {
 
-  public commands: Command[] = [];
+  private commands: Command[] = [];
   public options: Option[];
   public _args;
   public _aliases: string[];
   public _name;
-  private _relay;
   public _hidden;
-  private _parent;
-  public _description;
-  public _delimiter;
+  private _parent: Vorpal
+  private _description;
   public _mode;
   public _catch;
   public _help;
@@ -31,14 +29,12 @@ export class Command extends EventEmitter {
   public _init;
   private _after;
   public _allowUnknownOptions;
-  public _autocomplete;
-  public _done;
+  private _done;
   public _cancel;
   private _usage;
   public _fn;
   public _validate;
   public _parse;
-  public parent: Vorpal;
 
   /**
    * Initialize a new `Command` instance.
@@ -55,7 +51,6 @@ export class Command extends EventEmitter {
     this._args = [] as Arg[]
     this._aliases = []
     this._name = name
-    this._relay = false
     this._hidden = false
     this._parent = parent
     this._mode = false
@@ -102,7 +97,7 @@ export class Command extends EventEmitter {
     // and conditionally invoke the callback
     this.on(oname, val => {
       // unassigned or bool
-      if (isBoolean(this[name]) && isUndefined(this[name])) {
+      if (typeof this[name] === 'boolean' && typeof this[name] === 'undefined') {
         // if no value, bool true, and we have a default, then use it!
         if (val === null) {
           this[name] = option.bool ? defaultValue || true : false
@@ -209,8 +204,8 @@ export class Command extends EventEmitter {
    * @api public
    */
 
-  public delimiter (delimiter) {
-    this._delimiter = delimiter
+  public delimiter (delimiter: string) {
+    // delimiter
     return this
   }
 
@@ -252,7 +247,7 @@ export class Command extends EventEmitter {
         return this
       }
       this._parent.commands.forEach(cmd => {
-        if (!isEmpty(cmd._aliases)) {
+        if (Array.isArray(cmd._aliases) && cmd._aliases.length > 0) {
           if (cmd._aliases.includes(alias)) {
             const msg
               = 'Duplicate alias "'
@@ -379,7 +374,7 @@ export class Command extends EventEmitter {
    * @api public
    */
 
-  public usage (str?) {
+  public usage (str?: string) {
     const args = this._args.map(arg => humanReadableArgName(arg))
 
     const usage
@@ -387,7 +382,7 @@ export class Command extends EventEmitter {
       + (this.commands.length ? ' [command]' : '')
       + (this._args.length ? ` ${args.join(' ')}` : '')
 
-    if (!isNil(str)) {
+    if (!str) {
       return this._usage || usage
     }
 
@@ -432,7 +427,7 @@ export class Command extends EventEmitter {
    */
 
   public help (fn) {
-    if (isFunction(fn)) {
+    if (typeof fn === 'function') {
       this._help = fn
     }
     return this
@@ -448,7 +443,7 @@ export class Command extends EventEmitter {
    */
 
   public parse (fn) {
-    if (isFunction(fn)) {
+    if (typeof fn === 'function') {
       this._parse = fn
     }
     return this
@@ -463,7 +458,7 @@ export class Command extends EventEmitter {
    */
 
   public after (fn) {
-    if (isFunction(fn)) {
+    if (typeof fn === 'function') {
       this._after = fn
     }
     return this

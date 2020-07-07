@@ -1,6 +1,6 @@
 /* eslint-disable sort-keys */
 import { EventEmitter } from 'events'
-import os from 'os'
+
 import { CommandInstance } from './command-instance'
 import Vorpal from './vorpal'
 

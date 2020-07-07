@@ -1,9 +1,17 @@
-import { CommandArgs } from './types/types'
-
 import { Command } from './command'
 import { Session } from './session'
 
-export interface CommandInstanceOptions {
+export type CommandArgs = {
+  [arg: string]: string | string[];
+} & CommandArgsOptions;
+
+interface CommandArgsOptions {
+  options: {
+    [arg: string]: string | number | boolean;
+  };
+}
+
+interface CommandInstanceOptions {
   commandWrapper?: any;
   args?: CommandArgs;
   commandObject?: Command;

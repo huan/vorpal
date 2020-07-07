@@ -1,5 +1,6 @@
 /* eslint-disable sort-keys */
 import { EventEmitter } from 'events'
+
 import { Command } from './command'
 import { CommandInstance } from './command-instance'
 import Session from './session'

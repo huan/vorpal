@@ -1,9 +1,12 @@
 import { clone, isObject, isUndefined } from 'lodash'
 import Session from '../session'
-import { ArgTypes, CommandArgs } from '../types/types'
+import { ArgTypes } from '../types/types'
 
 import { Command } from '../command'
-import { CommandInstance } from '../command-instance'
+import {
+  CommandArgs,
+  CommandInstance,
+}                   from '../command-instance'
 
 import minimist from 'minimist'
 
